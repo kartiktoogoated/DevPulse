@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "es2016",                              /* Sets the JavaScript version for emitted code. */
+    "module": "NodeNext",                            /* Supports ESNext modules in Node.js. */
+    "moduleDetection": "force",                     /* Ensures module files are treated as modules. */
+    "moduleResolution": "NodeNext",                 /* Resolves modules in a Node.js style. */
+    "outDir": "./dist",                              /* Directory for compiled output files. */
+    "rootDir": "./src",                              /* Root folder containing source files. */
+
+    /* React and JSX */
+    "jsx": "react-jsx",                              /* Enables JSX syntax for React. */
+
+    /* Strict Type Checking */
+    "strict": true,                                  /* Enables all strict type-checking options. */
+    "forceConsistentCasingInFileNames": true,        /* Ensures consistent casing in imports. */
+    "skipLibCheck": true,                            /* Skips type checking of .d.ts files. */
+
+    /* Module Interop */
+    "esModuleInterop": true,                         /* Ensures compatibility with CommonJS modules. */
+    "allowSyntheticDefaultImports": true,            /* Allows default imports from non-ES modules. */
+
+    /* Path Aliases */
+    "baseUrl": ".",                                  /* Base directory for resolving non-relative module names. */
+    "paths": {
+      "@/components/*": ["src/components/*"],        /* Maps "@/components" to "src/components". */
+      "@/utils/*": ["src/utils/*"]                   /* Example for utility folder alias. */
+    }
+  },
+  "include": ["src/**/*"],                            /* Includes all source files in the "src" folder. */
+  "exclude": ["node_modules", "dist"]                /* Excludes unnecessary folders. */
+}
