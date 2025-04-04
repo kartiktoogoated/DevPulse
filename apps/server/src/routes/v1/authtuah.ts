@@ -3,6 +3,7 @@ import { Router, Request, Response } from "express";
 import dotenv from 'dotenv';
 import client from '@repo/db/client';
 import { error } from "console";
+import { generateToken } from '../../utils/jwt';
 
 const axios = require('axios').default; 
 dotenv.config();
@@ -18,55 +19,56 @@ gittyRouter.get('/github', async (req:Request, res:Response): Promise<void> => {
 });
 
 // Get /auth/github/callback - Handle Oauth callback and upsert user
-gittyRouter.get('/github/callback', async (req:Request, res:Response): Promise<void> => {
+gittyRouter.get('/github/callback', async (req: Request, res: Response): Promise<void> => {
     const code = req.query.code;
-    if (!code) 
-     res.status(400).send("No code recieved");
-
-    try {
-        //Exchange code for access token
-        const tokenResponse = await axios.post(
-            'https://github.com/login/oauth/access_token',
-            {
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
-                code,
-                redirect_uri: CALLBACK_URL,
-            },
-            { headers: { Accept: 'application/json' } }
-        );
-
-        const accessToken = tokenResponse.data.access_token;
-        if(!accessToken) {
-            res.status(400).send("No access token received");
-        }
-
-        // Fetch user from Github
-        const userResponse = await axios.get('https://api.github.com/user', {
-            headers: { Authorization: `token ${accessToken}`},
-        });
-
-        const { id, login, name, avatar_url, email } = userResponse.data;
-
-        // Upsert user record in database
-        const user = await client.user.upsert({
-            where: { githubId: id.toString() },
-            update: { name, email, avatarUrl: avatar_url, accessToken },
-            create: {
-                githubId: id.toString(),
-                name,
-                email,
-                avatarUrl: avatar_url,
-                accessToken,
-            },
-        });
-
-        // Return the user object for now (Add session/jwt later)
-        res.json(user);
-    } catch { 
-        console.error("Error during Github Oauth:", error);
-        res.status(500).send("Error during Github Oauth");
+    if (!code) {
+      res.status(400).send("No code received");
+      return;
     }
-});
+  
+    try {
+      const tokenResponse = await axios.post(
+        'https://github.com/login/oauth/access_token',
+        {
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          code,
+          redirect_uri: CALLBACK_URL,
+        },
+        { headers: { Accept: 'application/json' } }
+      );
+  
+      const accessToken = tokenResponse.data.access_token;
+      if (!accessToken) {
+        res.status(400).send("No access token received");
+        return;
+      }
+  
+      const userResponse = await axios.get('https://api.github.com/user', {
+        headers: { Authorization: `token ${accessToken}` },
+      });
+  
+      const { id, login, name, avatar_url, email } = userResponse.data;
+  
+      const user = await client.user.upsert({
+        where: { githubId: id.toString() },
+        update: { name, email, avatarUrl: avatar_url, accessToken },
+        create: {
+          githubId: id.toString(),
+          name,
+          email,
+          avatarUrl: avatar_url,
+          accessToken,
+        },
+      });
+  
+      const token = generateToken({ userId: user.id });
+  
+      res.json({ user, token });
+    } catch (error) {
+      console.error("Error during GitHub OAuth:", error);
+      res.status(500).send("Error during GitHub OAuth");
+    }
+  });  
 
 export default gittyRouter;
