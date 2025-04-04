@@ -29,12 +29,14 @@ model Commit {
   id         String   @id @default(uuid())
   userId     String
   repoName   String
+  sha        String   @unique
   message    String
   additions  Int
   deletions  Int
   timestamp  DateTime
   User       User     @relation(fields: [userId], references: [id])
 }
+
 
 model Summary {
   id            String   @id @default(uuid())
